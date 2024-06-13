@@ -22,8 +22,14 @@ jobs:
 
     - name: Sync files to S3 with Cache-Control header
       run: |
-        aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --cache-control “max-age=0, no-cache, no-store, must-revalidate”
+        aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}
+        
+    - name: Set Cache-Control headers
+      run: |
+        for file in $(aws s3 ls s3://${{ secrets.AWS_S3_BUCKET }}/ --recursive | awk '{print $4}'); do
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/$file s3://${{ secrets.AWS_S3_BUCKET }}/$file --cache-control "max-age=0, no-cache, no-store, must-revalidate" --metadata-directive REPLACE;
+        done
 
-    - name: Invalidate CloudFront cache
+     - name: Invalidate CloudFront cache
       run: |
         aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_DIST_ID }} --paths "/*"
