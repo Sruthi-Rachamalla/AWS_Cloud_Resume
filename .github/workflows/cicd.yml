@@ -26,10 +26,10 @@ jobs:
         
     - name: Set Cache-Control headers
       run: |
-        for file in $(aws s3 ls s3://${{ secrets.AWS_S3_BUCKET }}/ --recursive | awk '{print $4}'); do
-          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/$file s3://${{ secrets.AWS_S3_BUCKET }}/$file --cache-control "max-age=0, no-cache, no-store, must-revalidate" --metadata-directive REPLACE;
-        done
-
-     - name: Invalidate CloudFront cache
+        aws s3api list-objects-v2 --bucket ${{ secrets.AWS_S3_BUCKET }} --query 'Contents[].{Key: Key}' --output text | while read -r key; do
+          aws s3api copy-object --bucket ${{ secrets.AWS_S3_BUCKET }} --copy-source ${{ secrets.AWS_S3_BUCKET }}/$key --key $key --metadata-directive REPLACE --cache-control "max-age=0, no-cache, no-store, must-revalidate";
+        done
+        
+    - name: Invalidate CloudFront cache
       run: |
         aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_DIST_ID }} --paths "/*"
