@@ -1,9 +1,9 @@
-name: Deploy to S3 and Invalidate CloudFront Cache
+name: Deploy to S3 and Invalidate CloudFront
 
 on:
   push:
     branches:
-      - main
+      - main  # Adjust the branch name as needed
 
 jobs:
   deploy:
@@ -14,15 +14,15 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v3
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-2 # Replace with your region
+        aws-region: us-east-1  # Adjust the region as needed
 
-    - name: Sync files to S3 with Cache-Control header
+    - name: Sync files to S3
       run: |
-        aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --cache-control "max-age=0"
+        aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }}/
 
     - name: Invalidate CloudFront cache
       run: |
